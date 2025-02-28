@@ -38,13 +38,18 @@
 
 ## Dependencies
 
-- GCC c++ compiler installed with MinGW-w64
-
 - For Ubuntu terminal, enable WSL:
 ```bash
 wsl --install
 ```
 then install Ubuntu from Microsoft Store
+
+- Install GCC compiler and other dependencies:
+```bash
+sudo apt update
+sudo apt install build-essential
+g++ --version
+```
 
 - headers for project A:
 ```bash
