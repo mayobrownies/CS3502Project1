@@ -8,7 +8,7 @@
 #include <functional>
 #include <sstream>
 
-// bank account class that demonstrates thread operations and synchronization
+// bank account class for thread operations and synchronization
 class BankAccount {
 private:
     int accountId;

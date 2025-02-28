@@ -1,0 +1,570 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{titling}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{natbib}
+
+\geometry{margin=1in}
+
+\pretitle{\begin{center}\LARGE\bfseries}
+\posttitle{\par\end{center}\vskip 1.5em}
+\preauthor{\begin{center}\large}
+\postauthor{\end{center}}
+\predate{\begin{center}\large}
+\postdate{\end{center}\vskip 2em}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{1,1,1}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\definecolor{consolebg}{rgb}{0.95,0.95,0.95}
+\definecolor{promptcolor}{rgb}{0.4,0.4,0.4}
+
+\lstdefinestyle{consolestyle}{
+   backgroundcolor=\color{consolebg},
+   basicstyle=\ttfamily\footnotesize,
+   breakatwhitespace=false,
+   breaklines=true,
+   captionpos=b,
+   keepspaces=true,
+   numbers=none,
+   numbersep=0pt,
+   showspaces=false,
+   showstringspaces=false,
+   showtabs=false,
+   tabsize=2,
+   frame=single,
+   framesep=3pt,
+   xleftmargin=5pt,
+   xrightmargin=5pt
+}
+
+\lstset{style=mystyle}
+
+\title{CS3502 Project 1: Threading and IPC Implementation}
+\author{Kris Prasad \\[0.5em]
+CS3502 Section 03 \\[0.5em]
+NETID: kprasad\\[0.5em]
+}
+\date{Submitted: February 28, 2025}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\LARGE\bfseries CS3502 Project 1: Threading and IPC Implementation\par}
+    \vspace{2cm}
+    
+    {\large\bfseries Kris Prasad\par}
+    \vspace{0.5cm}
+    {\large CS3502 Section 03\par}
+    \vspace{0.5cm}
+    {\large NETID: kprasad\par}
+    \vspace{2cm}
+    
+    {\large Submitted: February 28, 2025\par}
+    
+    \vfill
+\end{titlepage}
+
+\newpage
+
+\section{Introduction}
+\subsection{Project Overview}
+This project implements two fundamental operating system concepts: multi-threading and inter-process communication. The implementation consists of two separate programs:
+
+\begin{itemize}
+    \item \textbf{ProjectA}: A multi-threaded banking system that demonstrates thread synchronization, mutex usage, and deadlock prevention techniques.
+    \item \textbf{ProjectB}: An inter-process communication system that uses pipes to transfer and manipulate directory listing data between parent and child processes.
+\end{itemize}
+
+\subsection{Objectives}
+Some of the main objectives of this project are to:
+\begin{itemize}
+    \item Demonstrate thread creation and management using C++ standard library
+    \item Implement synchronization mechanisms to protect shared resources
+    \item Create and resolve deadlock scenarios
+    \item Implement inter-process communication using pipes
+    \item Gain practical experience with operating system concepts
+\end{itemize}
+
+\subsection{Approach}
+My approach to this project was to create realistic applications that illustrate the required concepts:
+
+\begin{itemize}
+    \item For threading, I implemented a banking system where multiple threads perform concurrent transactions on shared accounts. Multiple tests were run to ensure proper functionality, including concurrency test, synchronization test, and stress test.
+    \item For IPC, I created a system where a parent process runs the \texttt{ls -l} command and sends the output to a child process, which then sorts and displays files by size.
+    \item Both implementations include logging to visualize the operations and clearly show the concepts.
+\end{itemize}
+
+This approach was informed by best practices in C++ development \cite{cpp11_faq}.
+
+\section{Implementation Details}
+\subsection{Threading Solution (ProjectA)}
+\subsubsection{Thread Implementation and Management}
+ProjectA implements a multi-threaded banking system using C++ standard library threading facilities \cite{cpp_thread}. The core of the implementation is the \texttt{BankAccount} class, which provides thread-safe operations on bank accounts.
+
+Key implementation features:
+\begin{itemize}
+    \item Thread creation and management using \texttt{std::thread}
+    \item Lambda functions for defining thread behavior inline
+    \item RAII \cite{cpp_raii} principles for resource management
+    \item Simulation of real-world banking operations through concurrent transactions
+\end{itemize}
+
+\begin{lstlisting}[language=C++, caption=Thread Creation Example]
+// create threads for random transactions
+for (auto& account : accounts) {
+    threads.emplace_back(RandomTransaction, std::ref(account));
+}
+
+// create threads for transfers between accounts
+for (int i = 0; i < accounts.size() - 1; i++) {
+    int fromIndex = i;
+    int toIndex = (i + 1) % accounts.size();
+    threads.emplace_back([&accounts, fromIndex, toIndex]() {
+        for (int j = 0; j < 3; j++) {
+            accounts[fromIndex].Transfer(accounts[toIndex], 100.0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    });
+}
+
+// wait for all threads to complete
+for (auto& thread : threads) {
+    thread.join();
+}
+\end{lstlisting}
+
+\subsubsection{Synchronization Mechanisms}
+The implementation employs several synchronization mechanisms to protect shared resources from concurrent access \cite{cpp_mutex}:
+
+\begin{itemize}
+    \item \texttt{std::mutex} for protecting individual account data
+    \item \texttt{std::lock\_guard} for automatic lock/unlock during operations \cite{cpp_lock_guard}
+    \item Static mutex for thread-safe logging across all accounts
+    \item Critical section protection to minimize deadlocks and race conditions
+\end{itemize}
+
+When implementing these mechanisms, I encountered and resolved (via forums) several common issues related to mutex usage in C++. One example I can remember is "mutex in namespace std does not name a type." This occurred while I ran the programs in Windows (before I moved to the Linux terminal) and was caused by incorrect configuration of MinGW \cite{stackoverflow_mutex}.
+
+\begin{lstlisting}[language=C++, caption=Mutex and Lock Guard Usage]
+// deposit money with mutex protection
+void Deposit(double amount) {
+    std::lock_guard<std::mutex> lock(lockObject);
+    balance += amount;
+    LogOperation("Deposited", amount);
+}
+
+// thread-safe logging using a shared mutex
+void LogOperation(const std::string& operation, double amount) {
+    std::lock_guard<std::mutex> logLock(logMutex);
+    std::stringstream ss;
+    ss << "Thread " << std::this_thread::get_id() << " - ";
+    ss << "Account " << accountId << ": " << operation << " $" << amount;
+    ss << " (Balance: $" << balance << ")" << std::endl;
+    std::cout << ss.str();
+}
+\end{lstlisting}
+
+\subsubsection{Banking Simulation}
+The banking simulation implements operations that mirror real-world banking transactions:
+\begin{itemize}
+    \item Account creation with initial balance
+    \item Thread-safe deposits and withdrawals with balance checking
+    \item Transfers between accounts with deadlock prevention
+    \item Move constructors for efficient account management \cite{move_constructors}
+    \item Error handling for edge cases like insufficient funds
+\end{itemize}
+
+The implementation follows modern C++ practices for resource management. The RAII (Resource Acquisition Is Initialization) pattern \cite{cpp_raii} ensures that resources like locks are automatically released when they go out of scope, preventing resource leaks even when exceptions occur. This is particularly important in multi-threaded applications where manual resource management can lead to deadlocks or race conditions.
+
+\subsubsection{Random Transaction Generation}
+The threading implementation makes extensive use of random variables to create realistic and unpredictable transaction patterns \cite{cpp_random}. This approach better simulates real-world banking scenarios where transactions occur at irregular intervals with varying amounts:
+
+\begin{itemize}
+    \item \texttt{std::random\_device} provides a source of non-deterministic random numbers
+    \item \texttt{std::mt19937} generates pseudo-random numbers
+    \item \texttt{std::uniform\_int\_distribution} creates evenly distributed random integers
+\end{itemize}
+
+\begin{lstlisting}[language=C++, caption=Random Transaction Generation]
+void RandomTransaction(BankAccount& account) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 1);
+    
+    for (int i = 0; i < 5; i++) {
+        if (dis(gen) == 0)
+            account.Deposit(100.0);
+        else
+            account.Withdraw(50.0);
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+\end{lstlisting}
+
+This randomization is key for stress testing the thread synchronization mechanisms. By creating unpredictable access patterns, the code can better reveal potential race conditions or deadlocks that might not appear with a predictable transaction sequence. The random selection of accounts for transfers in the stress test similarly helps ensure testing of the synchronization mechanisms under varied conditions.
+
+\subsubsection{Deadlock Demonstration and Prevention}
+Before diving into deadlocks, I used resources by kudvenkat to more deeply understand the concept of deadlocks and how to resolve them (these videos are in C\#) \cite{deadlock_in_multithreaded} \cite{resolving_deadlock}. I also reviewed various prevention strategies described in the studyraid deadlock article \cite{studyraid_deadlock}.
+
+The project shows deadlock scenarios and prevention through the \texttt{Transfer} method, which requires locking two accounts simultaneously. A timeout-based approach using \texttt{std::chrono} \cite{cpp_chrono} prevents deadlocks with these techniques:
+
+\begin{itemize}
+    \item \texttt{try\_lock()} instead of regular locks to avoid blocking indefinitely
+    \item Timeout mechanism to prevent indefinite waiting
+    \item Release of acquired locks if all required locks can't be obtained
+\end{itemize}
+
+\begin{lstlisting}[language=C++, caption=Deadlock Prevention with Timeout]
+bool Transfer(BankAccount& target, double amount, int timeoutMs = 1000) {
+    auto start = std::chrono::steady_clock::now();
+    
+    // try to acquire both locks with timeout to prevent deadlock
+    while (true) {
+        if (lockObject.try_lock()) {
+            if (target.lockObject.try_lock()) {
+                // successful transfer
+                balance -= amount;
+                target.balance += amount;
+                
+                target.lockObject.unlock();
+                lockObject.unlock();
+                return true;
+            }
+            lockObject.unlock();
+        }
+        
+        // check for timeout to prevent deadlock
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > timeoutMs) {
+            // timeout occurred, preventing deadlock
+            return false;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
+\end{lstlisting}
+
+\subsection{IPC Solution (ProjectB)}
+\subsubsection{Pipe Communication}
+ProjectB demonstrates inter-process communication using pipes with the Linux operating system \cite{posix_pipe}. The implementation:
+
+\begin{itemize}
+    \item Creates a parent process that executes \texttt{ls -l} command
+    \item Uses the fork system call \cite{posix_fork} to create a child process
+    \item Establishes a pipe for unidirectional communication
+    \item Implements the producer-consumer pattern for data processing
+\end{itemize}
+
+\begin{lstlisting}[language=C++, caption=Pipe Creation and Process Forking]
+int pipefd[2];
+pid_t pid;
+
+// create pipe for communication
+if (pipe(pipefd) == -1) {
+    std::cerr << "Pipe creation failed: " << strerror(errno) << std::endl;
+    return 1;
+}
+
+// create child process
+pid = fork();
+if (pid == -1) {
+    std::cerr << "Fork failed: " << strerror(errno) << std::endl;
+    close(pipefd[0]);
+    close(pipefd[1]);
+    return 1;
+}
+\end{lstlisting}
+
+\subsubsection{Data Transmission}
+The data transmission between processes uses a buffer-based approach \cite{ipc_cpp}:
+
+\begin{itemize}
+    \item Parent process reads data from \texttt{ls -l} using \texttt{popen()}
+    \item Data is written to the pipe in chunks to prevent buffer overflow
+    \item Child process reads from the pipe (redirected to stdin)
+    \item Child parses directory listing format and sorts files by size
+\end{itemize}
+
+For timing operations and performance measurements, the implementation uses \texttt{std::chrono} \cite{cpp_chrono}  to represent and manipulate time durations. This is used both in the threading implementation for deadlock prevention timeouts and in the IPC implementation to measure processing time.
+
+\begin{lstlisting}[language=C++, caption=Parent Process Writing to Pipe]
+// parent process
+FILE* ls = popen("ls -l", "r");
+char buffer[4096];
+size_t bytesRead;
+
+while ((bytesRead = fread(buffer, 1, sizeof(buffer), ls)) > 0) {
+    if (write(pipefd[1], buffer, bytesRead) == -1) {
+        throw std::runtime_error(std::string("Write to pipe failed: ") 
+                               + strerror(errno));
+    }
+}
+\end{lstlisting}
+
+The implementation also handles process exit status checking \cite{exit_status} to ensure proper termination and resource cleanup:
+
+\begin{lstlisting}[language=C++, caption=Checking Child Process Exit Status]
+// wait for child process to complete
+int status;
+if (waitpid(pid, &status, 0) == -1) {
+    throw std::runtime_error(std::string("Wait failed: ") + strerror(errno));
+}
+
+// check how child process terminated
+if (WIFEXITED(status)) {
+    std::cout << "[Parent Process " << getpid() << "] Child process exited with status " 
+              << WEXITSTATUS(status) << std::endl;
+}
+\end{lstlisting}
+
+\section{Environment Setup and Tool Usage}
+\subsection{Development Environment}
+The project was developed in a Linux environment using Windows Subsystem for Linux (WSL) with Ubuntu \cite{microsoft_wsl_install}. Key components:
+
+\begin{itemize}
+    \item Ubuntu running on WSL
+    \item GCC compiler (g++) with C++17 support
+    \item POSIX-specific features (pipes, fork) not available in native Windows
+\end{itemize}
+
+\subsection{Language and Libraries}
+The project leverages C++17 and its standard libraries:
+
+\begin{itemize}
+    \item Standard Template Library (STL) for containers and algorithms
+    \item Thread support library (\texttt{<thread>}, \texttt{<mutex>})
+    \item POSIX system calls for IPC implementation
+    \item \texttt{std::chrono} for timing operations
+    \item \texttt{std::random} for generating random values \cite{cpp_random}
+    \item etc.
+\end{itemize}
+
+The \texttt{std::random} library provides a set of pseudo-random number generators and distributions that are used in the banking simulation to create realistic transaction patterns. This approach is superior to using the older \texttt{rand()} function as it offers better statistical properties and thread safety, which is crucial in a multi-threaded application.
+
+\subsection{Setup Challenges}
+
+\begin{itemize}
+\item \textbf{File system path differences:} Learning that Windows paths like "C:/CS3502Project1" translate to "/mnt/c/CS3502Project1" in Linux. Resolved with Vladimir Kaplarevic's directory navigation walkthrough \cite{linux_cd}.
+    
+    \item \textbf{Programming language issues:} Initially attempted using C\#, but encountered compilation issues with duplicate assembly files that couldn't be resolved through forum research. Switching to C++ provided better support for the project requirements.
+    
+    \item \textbf{Development environment setup:} Installed necessary tools using package management commands like \texttt{sudo apt install build-essential}, which provided GCC, and other key development tools.
+    
+\end{itemize}
+
+\section{Challenges and Solutions}
+\subsection{Threading Challenges}
+Key threading challenges and solutions:
+
+\begin{itemize}
+    \item \textbf{Race conditions:} Solved with mutex locking and \texttt{std::lock\_guard}
+    \item \textbf{Deadlocks:} Implemented timeout-based prevention with \texttt{try\_lock()} and \texttt{std::chrono}
+    \item \textbf{Thread-safe logging:} Used a static mutex shared across all accounts
+    \item \textbf{Resource management:} Applied RAII principles for automatic resource cleanup
+\end{itemize}
+
+\subsection{IPC Challenges}
+Key IPC challenges and solutions:
+
+\begin{itemize}
+    \item \textbf{Pipe buffer management:} Implemented chunk-based reading/writing
+    \item \textbf{Process synchronization:} Used \texttt{waitpid()} for termination handling
+    \item \textbf{Error handling:} Added checks for system calls
+    \item \textbf{Resource leaks:} Properly closed  file descriptors
+\end{itemize}
+
+\subsection{Debugging Techniques}
+
+\begin{itemize}
+    \item Thread-specific logging to track execution flow
+    \item Process ID tracking for parent and child processes
+    \item Exception handling with informative error messages
+    \item Incremental testing of components before integration
+\end{itemize}
+
+\section{Results and Outcomes}
+\subsection{Threading Implementation}
+The threading implementation successfully covers key concepts in multi-threaded programming. Using the C++ standard library for thread creation and management allows multiple operations to run simultaneously. The code creates and manages threads for various banking operations—deposits, withdrawals, and transfers—showing the practical benefits of concurrent programming.
+
+Key features:
+\begin{itemize}
+    \item Thread creation and management
+    \item Protecting shared resources with mutex-based synchronization
+    \item Deadlock prevention using timeout-based approach
+    \item Race condition avoidance through proper synchronization
+    \item Successful performance under concurrent transaction load
+\end{itemize}
+
+\subsubsection{Running the Threading Program}
+\begin{lstlisting}[style=consolestyle, caption=Running the Threading Program in Ubuntu Terminal]
+cd /mnt/c/CS3502Project1
+g++ -o projA ProjectA.cpp -pthread
+./projA
+\end{lstlisting}
+
+\subsubsection{Concurrency Test Results}
+The concurrency test shows how multiple threads can safely access and modify a shared resource (a bank account) without causing data corruption:
+
+\begin{lstlisting}[style=consolestyle, caption=Sample Output: Concurrency Test]
+Concurrency Test
+Thread 140655623722816 - Account 1: Created with $1000 (Balance: $1000)
+Thread 140654852163264 - Account 1: Withdrawn $100 (Balance: $900)
+Thread 140654868948672 - Account 1: Withdrawn $100 (Balance: $800)
+Thread 140655623718592 - Account 1: Withdrawn $100 (Balance: $700)
+Thread 140654860555968 - Account 1: Withdrawn $100 (Balance: $600)
+Thread 140655606933184 - Account 1: Withdrawn $100 (Balance: $500)
+Thread 140655615325888 - Account 1: Withdrawn $100 (Balance: $400)
+Thread 140655598540480 - Account 1: Withdrawn $100 (Balance: $300)
+Thread 140654877341376 - Account 1: Withdrawn $100 (Balance: $200)
+Thread 140655590147776 - Account 1: Withdrawn $100 (Balance: $100)
+Thread 140655581755072 - Account 1: Withdrawn $100 (Balance: $0)
+Thread 140654852163264 - Account 1: Insufficient funds for withdrawal of $100 (Balance: $0)
+Thread 140654868948672 - Account 1: Insufficient funds for withdrawal of $100 (Balance: $0)
+...
+\end{lstlisting}
+
+This output shows how the mutex protection ensures that each withdrawal operation is atomic, with the balance correctly updated after each transaction. When the balance reaches zero, subsequent withdrawal attempts are properly rejected with "Insufficient funds" messages.
+
+\subsubsection{Synchronization Test Results}
+The synchronization test demonstrates the prevention of deadlocks when two threads attempt to transfer money between accounts simultaneously:
+
+\begin{lstlisting}[style=consolestyle, caption=Sample Output: Synchronization Test]
+Synchronization Test
+Thread 140655623722816 - Account 1: Created with $500 (Balance: $500)
+Thread 140655623722816 - Account 2: Created with $500 (Balance: $500)
+Thread 140655581755072 attempting transfer: $300 from Account 1 to Account 2
+Thread 140655581755072 completed transfer: $300 from Account 1 to Account 2
+Thread 140655590147776 attempting transfer: $200 from Account 2 to Account 1
+Thread 140655590147776 completed transfer: $200 from Account 2 to Account 1
+Account 1 final balance: $400
+Account 2 final balance: $600
+\end{lstlisting}
+
+This output demonstrates how the timeout-based approach with \texttt{try\_lock()} successfully prevents deadlocks, allowing both transfers to complete without getting stuck in a circular wait condition.
+
+\subsubsection{Stress Test Results}
+The stress test evaluates the system's performance under heavy load with many concurrent operations:
+
+\begin{lstlisting}[style=consolestyle, caption=Sample Output: Stress Test]
+Stress Test
+Thread 140655623722816 - Account 0: Created with $1000 (Balance: $1000)
+Thread 140655623722816 - Account 1: Created with $1000 (Balance: $1000)
+Thread 140655623722816 - Account 2: Created with $1000 (Balance: $1000)
+Thread 140655623722816 - Account 3: Created with $1000 (Balance: $1000)
+....
+Stress test completed in 0.057 seconds
+Total accounts with non-zero balance: 20
+\end{lstlisting}
+
+The stress test results show that the system can handle multiple concurrent operations efficiently, completing 100 threads performing 500 transfer operations in just 0.057 seconds while maintaining data integrity across all 20 accounts.
+
+
+\subsection{IPC Implementation}
+The IPC implementation creates a pipe between parent and child processes, establishing a communication channel for data transfer. This approach shows how processes can communicate in a Linux environment—a fundamental concept in operating systems.
+
+Key features:
+\begin{itemize}
+    \item Successful pipe-based communication between processes
+    \item Data transfer of directory listing information
+    \item Child process sorting and analysis of received data
+    \item Error handling throughout the implementation
+    \item Clean resource management and process synchronization
+\end{itemize}
+
+\subsubsection{IPC Program Output}
+
+\begin{lstlisting}[style=consolestyle, caption=Running the IPC Program in Ubuntu Terminal]
+cd /mnt/c/CS3502Project1
+g++ -o projB ProjectB.cpp
+./projB
+
+[Parent Process 408] Starting
+[Parent Process 408] Pipe created successfully
+[Parent Process 408] Created child process 409
+[Parent Process 408] Closed read end of pipe
+[Parent Process 408] Running 'ls -l'
+[Child Process 409] Started
+[Child Process 409] Closed write end of pipe
+[Child Process 409] Redirected pipe to stdin
+
+[Child Process 409] Started receiving data from pipe
+...
+
+Files sorted by size:
+projA (116224 bytes)
+projB (71288 bytes)
+ProjectA.cpp (9424 bytes)
+ProjectB.cpp (7910 bytes)
+[Parent Process 408] Child process exited with status 0
+\end{lstlisting}
+
+This output shows the complete lifecycle of the IPC implementation. The parent process creates a pipe, forks a child process, and runs the \texttt{ls -l} command. The child process receives the directory listing data through the pipe, processes it, and outputs the files sorted by size. The process ID labeling in the output helps visualize separate executions and their communication.
+
+
+\subsection{Limitations and Improvements}
+While the projects successfully showed threading and IPC concepts, several potential improvements could be made:
+
+\begin{itemize}
+    \item Alternative deadlock prevention algorithms (resource ordering, detection)
+    \item Bidirectional communication between processes
+    \item Better error recovery mechanisms
+    \item Integration of threading and IPC components
+\end{itemize}
+
+\section{Reflection and Learning}
+This project provided hands-on experience with core operating system concepts. Some things I learned include:
+\begin{itemize}
+    \item Understanding thread synchronization challenges and solutions
+    \item Deadlock prevention strategies and their trade-offs
+    \item Inter-process communication mechanisms in Linux
+    \item POSIX system calls and their design
+    \item Proper synchronization in concurrent applications
+    \item Debugging techniques for multi-threaded and multi-process systems
+\end{itemize}
+
+Outside of the main project features, I learned about general C++ functionality through videos from Mike Shah \cite{mike_shah}. These videos helped me get a surface-level understanding of how to implement threading, deadlock resolution, inter-process communication, and other concepts in C++ before diving into more specific resources for my application.
+
+The experience gained through this project has deepened my understanding of operating system concepts and provided practical skills applicable throughout my career in computer science. Working directly with these low-level mechanisms has given me a much better appreciation for the complexities involved in modern systems.
+
+\section{Code Repository}
+The complete source code for this project is available on GitHub:
+\url{https://github.com/mayobrownies/CS3502Project1}
+
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+
+\end{document}
