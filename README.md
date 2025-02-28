@@ -1,6 +1,7 @@
 # CS3502 Project 1: Threading and IPC
 
 ## Overview
+Explore and implement fundamental operating systems concepts such as multi-threading, deadlock, synchronization, interprocess communication, linux, etc.
 1. **ProjectA**: A multi-threaded banking system demonstrating thread synchronization and deadlock handling
 2. **ProjectB**: An inter-process communication system for ranking files by size using pipes
 
