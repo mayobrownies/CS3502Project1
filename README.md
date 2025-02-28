@@ -38,17 +38,16 @@
 
 ## Dependencies
 
-- GCC c++ compiler
-Installed with MinGW-w64
+- GCC c++ compiler installed with MinGW-w64
 
-- Ubuntu terminal
-enable WSL:
+- For Ubuntu terminal, enable WSL:
 ```bash
 wsl --install
 ```
 then install Ubuntu from Microsoft Store
 
 - headers for project A:
+```bash
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -58,8 +57,10 @@ then install Ubuntu from Microsoft Store
 #include <algorithm>
 #include <functional>
 #include <sstream>
+```
 
 - headers for project B:
+```bash
 #include <iostream>
 #include <vector>
 #include <string>
@@ -71,6 +72,7 @@ then install Ubuntu from Microsoft Store
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+```
 
 headers provide necessary functions and classes for projects including:
 - input/output stream
