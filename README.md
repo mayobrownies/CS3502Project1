@@ -70,6 +70,7 @@ Thread 140458589796032 - Account 1: Deposited $100 (Balance: $1100)
 Thread 140458573010624 - Account 3: Withdrawn $50 (Balance: $950)
 Thread 140458564617920 - Account 4: Deposited $100 (Balance: $1100)
 Thread 140458556225216 - Account 5: Withdrawn $50 (Balance: $950)
+...
 ```
 
 ```bash
@@ -84,4 +85,5 @@ Thread 140458556225216 - Account 5: Withdrawn $50 (Balance: $950)
 
 [Child Process 657] Started receiving data from pipe
 [Parent Process 656] Sent chunk 1 (401 bytes) to pipe
+...
 ```
