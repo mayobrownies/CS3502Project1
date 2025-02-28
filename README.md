@@ -36,6 +36,52 @@
 - Child process: Receives directory data, sorts files by size, and displays results
 - Detailed logging of inter-process communication
 
+## Dependencies
+
+- GCC c++ compiler
+Installed with MinGW-w64
+
+- Ubuntu terminal
+enable WSL:
+```bash
+wsl --install
+```
+then install Ubuntu from Microsoft Store
+
+- headers for project A:
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <vector>
+#include <random>
+#include <chrono>
+#include <algorithm>
+#include <functional>
+#include <sstream>
+
+- headers for project B:
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+
+headers provide necessary functions and classes for projects including:
+- input/output stream
+- thread management
+- synchronization
+- POSIX calls
+- timing
+- formatting
+- etc.
+
+
 ## Compilation and Execution
 
 ### Compiling the Projects
