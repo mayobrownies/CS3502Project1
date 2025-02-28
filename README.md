@@ -40,7 +40,7 @@
 
 ### Compiling the Projects
 
-This project is compiled using g++ compiler in Ubuntu terminal.
+This project is compiled using GCC c++ compiler in Ubuntu terminal.
 
 ```bash
 g++ -o projA ProjectA.cpp -pthread
